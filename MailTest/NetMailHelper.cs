@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -63,14 +64,27 @@ namespace MailTest {
                 //超时时间 
                 smtp.EnableSsl = enableSSL;//是否加密传输
                 smtp.Timeout = 10000;
+
+
+                var fileName = "测试附件.xlsx";
+                var filePath = Path.Combine(AppContext.BaseDirectory, "Data", fileName);
+                var fileBytes = File.ReadAllBytes(filePath);
+                var ms = new MemoryStream(fileBytes);                
+                var attachment = new Attachment(ms, MediaTypeNames.Application.Octet) {
+                    Name = fileName
+                };
+                mail.Attachments.Add(attachment);
+
                 try {
                     smtp.Send(mail);
+                    Console.WriteLine("发送成功");
                 }
                 catch (Exception ex) {
                     Console.WriteLine(ex.Message);
                 }
             }
-            catch (Exception) {
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
             }
             finally {
                 mail.Dispose();

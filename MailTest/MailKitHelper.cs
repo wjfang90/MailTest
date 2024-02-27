@@ -27,10 +27,25 @@ namespace MailTest {
             message.Subject = msg;
 
 
-            var text = new TextPart("plain");
-            text.SetText(Encoding.UTF8, msg);
+            var textPart = new TextPart("plain");
+            textPart.SetText(Encoding.UTF8, msg);
 
-            message.Body = text;
+            var multipart = new Multipart("mixed");
+            multipart.Add(textPart);
+
+            var fileName = "测试附件.xlsx";
+            var filePath = Path.Combine(AppContext.BaseDirectory, "Data", fileName);
+            var fileBytes = File.ReadAllBytes(filePath);
+            var ms = new MemoryStream(fileBytes);
+            var mimePart = new MimePart("application", "octet-stream") {
+                Content = new MimeContent(ms),
+                ContentDisposition = new MimeKit.ContentDisposition(MimeKit.ContentDisposition.Attachment),
+                ContentTransferEncoding = ContentEncoding.Base64,
+                FileName = fileName
+            };
+            multipart.Add(mimePart);
+
+            message.Body = multipart;
 
 
             try {
@@ -39,9 +54,10 @@ namespace MailTest {
 
                     // Note: only needed if the SMTP server requires authentication
                     client.Authenticate(userName, password);
-
                     client.Send(message);
                     client.Disconnect(true);
+
+                    Console.WriteLine("发送成功");
                 }
             }
             catch (Exception ex) {
