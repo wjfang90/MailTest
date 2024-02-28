@@ -2,6 +2,8 @@
 using MailTest;
 
 
+AsposeHelper.SetLicense();
+
 Console.WriteLine("输入0：表示使用System.Net.Mail 发邮件");
 Console.WriteLine("输入1：表示使用MailKit 发邮件");
 var mailTypeStr = Console.ReadLine();
@@ -29,7 +31,6 @@ switch (mailTypeStr) {
                 portStr = Console.ReadLine();
             }
             var port = int.Parse(portStr);
-
 
             MailKitHelper.SendEmail(enableSSL, port);
             break;

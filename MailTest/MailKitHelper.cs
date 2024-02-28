@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MimeKit.Utils;
 
 namespace MailTest {
     public class MailKitHelper {
@@ -18,12 +19,14 @@ namespace MailTest {
             //var port = 25;//不加密端口，加密端口是456
             var userName = "";
             var password = "";
-            var address = "";
+            var toAddress = "";
+            var ccAddress = "";
             var msg = $"测试 send email by MailKit host={host} ssl={enableSSL} port={port}";
 
-            var message = new MimeMessage();            
-            message.From.Add(new MailboxAddress("fang", address));
-            message.To.Add(new MailboxAddress("fang", address));
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("fang", userName));
+            message.To.Add(new MailboxAddress("fang", toAddress));
+            message.Cc.Add(new MailboxAddress("fang", ccAddress));
             message.Subject = msg;
 
 
@@ -33,32 +36,45 @@ namespace MailTest {
             var multipart = new Multipart("mixed");
             multipart.Add(textPart);
 
-            var fileName = "测试附件.xlsx";
-            var filePath = Path.Combine(AppContext.BaseDirectory, "Data", fileName);
-            var fileBytes = File.ReadAllBytes(filePath);
+            var fileName = $"测试非常非常非常非常非常非常非常非常非常非常非常非常非常非常长的附件文件名-{DateTime.Now.ToString("yyyyMMdd")}.xlsx";
+            //var filePath = Path.Combine(AppContext.BaseDirectory, "Data", fileName);
+            //var fileBytes = File.ReadAllBytes(filePath);
+
+            var fileBytes = AsposeHelper.CreateWorkBook("测试");
+
             var ms = new MemoryStream(fileBytes);
-            var mimePart = new MimePart("application", "octet-stream") {
-                Content = new MimeContent(ms),
-                ContentDisposition = new MimeKit.ContentDisposition(MimeKit.ContentDisposition.Attachment),
-                ContentTransferEncoding = ContentEncoding.Base64,
+
+            var contentDisposition = new ContentDisposition(ContentDisposition.Attachment) {
                 FileName = fileName
             };
+
+            //重写附件名称编码Rfc2047，支持长文件名
+            if (contentDisposition.Parameters.TryGetValue("filename", out Parameter parameter))
+                parameter.EncodingMethod = ParameterEncodingMethod.Rfc2047;
+
+            var mimePart = new MimePart("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+                Content = new MimeContent(ms),
+                ContentDisposition = contentDisposition,
+                ContentTransferEncoding = ContentEncoding.Base64
+                //FileName = fileName//有些client接收邮件后，附件名太长会被截断，重写附件名称编码Rfc2047
+            };
+
             multipart.Add(mimePart);
 
             message.Body = multipart;
 
 
             try {
-                using (var client = new SmtpClient()) {
-                    client.Connect(host, port, enableSSL);
+                using var client = new SmtpClient();
+                //using var client = new SmtpClient(new ProtocolLogger(Console.OpenStandardOutput()));//输出日志
+                client.Connect(host, port, enableSSL);
 
-                    // Note: only needed if the SMTP server requires authentication
-                    client.Authenticate(userName, password);
-                    client.Send(message);
-                    client.Disconnect(true);
+                // Note: only needed if the SMTP server requires authentication
+                client.Authenticate(userName, password);
+                client.Send(message);
+                client.Disconnect(true);
 
-                    Console.WriteLine("发送成功");
-                }
+                Console.WriteLine("发送成功");
             }
             catch (Exception ex) {
                 Console.WriteLine(ex.Message);
@@ -84,7 +100,7 @@ namespace MailTest {
                     //    var message = client.GetMessage(i);
                     //    Console.WriteLine("Subject: {0}", message.Subject);
                     //}
-                    if(client.Count > 0) {
+                    if (client.Count > 0) {
                         var message = client.GetMessage(client.Count - 1);
                         Console.WriteLine("Subject: {0}", message.Subject);
                     }

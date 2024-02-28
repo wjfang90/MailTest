@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="MailKit" Version="4.2.0" />
+	<PackageReference Include="Aspose.Cells" Version="21.8.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -32,7 +32,7 @@ namespace MailTest {
             
             var msg = $"send email by System.Net.Mail host={host} ssl={enableSSL} port={port}";
 
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+            //System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
             //ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
             //邮件发送类 
