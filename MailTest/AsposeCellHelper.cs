@@ -21,7 +21,7 @@ namespace MailTest {
             wb.Worksheets.Clear();
             var sheet = wb.Worksheets.Add(sheetName);
 
-            var titleList = Enumerable.Range(1, 6).ToList().Select(t =>$"标题{t}").ToList();
+            var titleList = Enumerable.Range(1, 7).ToList().Select(t =>$"标题{t}").ToList();
             var dataList = Enumerable.Range(1,10).ToList().Select(t=>$"测试{t}").ToList();
 
             //设置一级表头
@@ -47,6 +47,7 @@ namespace MailTest {
             sheet.Cells.SetColumnWidth(4, 12);
             sheet.Cells.SetColumnWidth(5, 40);
             sheet.Cells.SetColumnWidth(6, 50);
+            sheet.Cells.SetColumnWidth(7, 100);
 
 
             var defaultStyle = wb.DefaultStyle;
@@ -66,10 +67,16 @@ namespace MailTest {
                 for (int columnIndex = 0; columnIndex < titleList.Count; columnIndex++) {
 
                     var value = dataList[rowIndex]?.ToString() ?? string.Empty;
+                    if (columnIndex == titleList.Count - 1) {
+                        value = "http://localhost:8000/fulltext.aspx?lib=chl&gid=31023";
+                        sheet.Hyperlinks.Add(firstRow: rowIndex + 2, firstColumn: columnIndex, totalRows: 1, totalColumns: 1, address: value);
+                    }
 
                     sheet.Cells[rowIndex + 2, columnIndex].PutValue(value);
                 }
             }
+
+
 
             using (MemoryStream ms = new MemoryStream()) {
                 wb.Save(ms, SaveFormat.Xlsx);
